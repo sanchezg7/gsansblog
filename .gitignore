@@ -14,3 +14,4 @@ yarn-error.log*
 
 .next
 out
+.DS_Store

@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { remark } from 'remark';
-import html from 'remark-html';
+import { markdownToHtml } from './markdown';
 
 const postsDirectory = path.join(process.cwd(), 'posts');
 
@@ -15,6 +14,10 @@ export interface BlogPost {
 }
 
 export async function getAllPosts(): Promise<BlogPost[]> {
+    if (!fs.existsSync(postsDirectory)) {
+        fs.mkdirSync(postsDirectory, { recursive: true });
+    }
+
     const fileNames = fs.readdirSync(postsDirectory);
     const allPostsData = await Promise.all(
         fileNames.map(async (fileName) => {
@@ -23,10 +26,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
             const fileContents = fs.readFileSync(fullPath, 'utf8');
 
             const { data, content } = matter(fileContents);
-            const processedContent = await remark()
-                .use(html)
-                .process(content);
-            const contentHtml = processedContent.toString();
+            const contentHtml = await markdownToHtml(content);
 
             return {
                 slug,
@@ -45,10 +45,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
         const fileContents = fs.readFileSync(fullPath, 'utf8');
 
         const { data, content } = matter(fileContents);
-        const processedContent = await remark()
-            .use(html)
-            .process(content);
-        const contentHtml = processedContent.toString();
+        const contentHtml = await markdownToHtml(content);
 
         return {
             slug,
